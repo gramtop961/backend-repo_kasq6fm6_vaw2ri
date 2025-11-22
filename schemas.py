@@ -1,48 +1,48 @@
 """
-Database Schemas
+Database Schemas for Gamma
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model maps to a MongoDB collection (lowercased class name).
+- User -> user
+- Document -> document
+- Summary -> summary
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List, Literal
+from datetime import datetime
 
-# Example schemas (replace with your own):
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
     name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    email: EmailStr = Field(..., description="Unique email")
+    password_hash: str = Field(..., description="BCrypt hashed password")
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    plan: Literal["free", "pro", "enterprise"] = "free"
+    is_active: bool = True
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Document(BaseModel):
+    owner_id: str = Field(..., description="User id (stringified ObjectId)")
+    filename: str
+    mime_type: str
+    size: int
+    text: Optional[str] = None
+    visibility: Literal["private", "shared"] = "private"
+    share_id: Optional[str] = None
+    tags: List[str] = []
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+
+class Summary(BaseModel):
+    owner_id: str
+    document_id: str
+    style: Literal["concise", "detailed", "bullets", "legal", "executive"] = "concise"
+    prompt: Optional[str] = None
+    content: str
+    model: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    shared: bool = False
+    share_id: Optional[str] = None
